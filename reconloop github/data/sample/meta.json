@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "bank_lines": 29,
+    "book_docs": 185,
+    "razorpay_rows": 185,
+    "settlements": 18
+  },
+  "difficulty": "standard",
+  "generator_version": "1.1",
+  "merchant": "Kaveri Home Goods Pvt Ltd",
+  "period_end": "2026-08-23",
+  "period_start": "2026-08-03",
+  "seed": 7,
+  "statement_end": "2026-08-26"
+}

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReconLoop: settlement reconciliation you can grade</title>
+<meta name="description" content="A Razorpay settlement reconciliation agent that runs in your browser and is scored against an answer key.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Zilla+Slab:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F2F5EE;--card:#F8FAF5;--rule:#BCD0E6;--ink:#1E2B5E;--ink-2:#4A5680;--red:#B42318;--ok:#1E6B45;
+--margin:rgba(196,48,43,.55);--hl:#F4DC57;--btn:#1E2B5E;--btn-ink:#F2F5EE;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--paper:#12182B;--card:#172038;--rule:#2C3A5E;--ink:#DDE5F8;--ink-2:#A8B4D4;
+--red:#FF8C7C;--ok:#7FD6A6;--margin:rgba(255,140,124,.4);--hl:#6E5A12;--btn:#DDE5F8;--btn-ink:#12182B;color-scheme:dark}}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.55 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;top:0;bottom:0;left:40px;width:5px;pointer-events:none;border-left:1.5px solid var(--margin);border-right:1.5px solid var(--margin)}
+main{max-width:1120px;padding:36px 28px 80px 84px}
+h1,h2,h3,h4,h5{font-family:"Zilla Slab",Georgia,serif;font-weight:600;line-height:1.2}
+.masthead{margin:0;font-weight:600;color:var(--ink-2)}
+h1{font-size:2.1rem;font-size:clamp(1.7rem,3.2vw,2.4rem);margin:8px 0 12px;max-width:30ch}
+.lede{max-width:72ch;color:var(--ink-2);margin:0 0 12px}
+.status{display:inline-block;margin:6px 0 0;padding:6px 12px;border:1px dashed var(--ink-2);border-radius:6px;color:var(--ink-2)}
+.status.ready{border-style:solid;border-color:var(--ok);color:var(--ok)}
+.status.bad{border-style:solid;border-color:var(--red);color:var(--red)}
+[role=tablist]{display:flex;flex-wrap:wrap;margin:28px 0 0;border-bottom:3px double var(--ink-2)}
+[role=tab]{margin-right:4px;font:inherit;font-weight:600;color:var(--ink-2);background:none;border:1px solid transparent;border-bottom:none;
+padding:8px 14px;border-radius:6px 6px 0 0;cursor:pointer}
+[role=tab][aria-selected=true]{color:var(--ink);background:var(--card);border-color:var(--rule)}
+[role=tabpanel]{padding:18px 0 0}
+fieldset{border:none;margin:0;padding:0}
+legend{font-weight:600;margin-bottom:4px;padding:0}
+.controls{display:flex;flex-wrap:wrap;align-items:flex-start;margin:4px 0 14px}
+.controls>*{margin:0 36px 14px 0}
+.choice{display:flex;flex-wrap:wrap}
+.choice label{white-space:nowrap;margin:0 18px 4px 0}
+input[type=number],input[type=text]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;width:11em}
+input[type=file]{font:inherit;color:var(--ink);max-width:100%}
+button{font:inherit;cursor:pointer;border-radius:6px;padding:8px 16px;border:1.5px solid var(--btn);background:none;color:var(--ink)}
+button.primary{background:var(--btn);color:var(--btn-ink);font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,[role=tab]:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.small,.notes{font-size:.92rem;color:var(--ink-2);max-width:78ch}
+.notes strong{color:var(--ink)}
+.error{color:var(--red);font-weight:600;border-left:4px solid var(--red);padding:4px 10px;margin:12px 0}
+.out{margin-top:18px;padding-top:6px;border-top:1px solid var(--rule)}
+.wide{overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+th,td{text-align:left;vertical-align:top;padding:6px 12px 6px 0;border-bottom:1px solid var(--rule)}
+thead th{color:var(--ink-2);border-bottom:3px double var(--ink-2)}
+iframe{width:100%;height:1100px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);margin-top:12px}
+.files{display:flex;flex-wrap:wrap;margin:10px 0 14px}
+.files label{display:flex;flex-direction:column;font-weight:600;margin:0 28px 14px 0}
+.files input{margin-top:4px}
+details{margin-top:20px}
+summary{cursor:pointer;font-weight:600}
+code{font-size:.88rem}
+footer{margin-top:56px;padding-top:14px;border-top:3px double var(--ink-2);color:var(--ink-2);font-size:.92rem}
+footer a,.lede a{color:var(--ink)}
+@media (max-width:760px){body::before{display:none}main{padding:22px 14px 56px}iframe{height:900px}}
+</style>
+</head>
+<body>
+<main>
+<p class="masthead">ReconLoop</p>
+<h1>Razorpay settlement reconciliation, graded against an answer key</h1>
+<p class="lede">Settlements against the bank statement, payments against invoices, refunds against credit notes, plus a
+fee and GST audit. Rules do almost all of the work, and every synthetic batch ships with an answer key, so every run
+below is scored: what it linked, what it got wrong, and what it handed back to a person.</p>
+<p id="status" class="status" role="status" aria-live="polite">Loading the Python engine into this tab (about 12&nbsp;MB, first visit only)&hellip;</p>
+
+<div role="tablist" aria-label="Demo sections">
+  <button role="tab" id="t-try" aria-selected="true" aria-controls="p-try">Try a batch</button>
+  <button role="tab" id="t-own" aria-selected="false" aria-controls="p-own" tabindex="-1">Your own CSVs</button>
+  <button role="tab" id="t-bench" aria-selected="false" aria-controls="p-bench" tabindex="-1">Benchmark</button>
+  <button role="tab" id="t-how" aria-selected="false" aria-controls="p-how" tabindex="-1">How it works</button>
+</div>
+
+<section role="tabpanel" id="p-try" aria-labelledby="t-try">
+  <form id="f-try">
+    <div class="controls">
+      <fieldset><legend>Batch</legend><div class="choice">
+        <label><input type="radio" name="difficulty" value="standard"> standard</label>
+        <label><input type="radio" name="difficulty" value="hard" checked> hard</label></div></fieldset>
+      <div><label for="seed"><strong>Seed</strong></label><br>
+        <input type="number" id="seed" value="305" min="0" step="1">
+        <button type="button" id="dice">Random</button>
+        <div class="small">Same seed, same batch. 301 to 310 are the benchmark batches.</div></div>
+      <fieldset><legend>Tie-breaker</legend><div class="choice">
+        <label><input type="radio" name="tb-try" value="Rules only" checked> Rules only</label>
+        <label><input type="radio" name="tb-try" value="Greedy baseline"> Greedy baseline</label>
+        <label><input type="radio" name="tb-try" value="Oracle ceiling"> Oracle ceiling</label></div></fieldset>
+    </div>
+    <button type="submit" class="primary" id="go-try" data-needs-runtime disabled>Reconcile this batch</button>
+  </form>
+  <p class="notes"><strong>Rules only</strong> sends anything unclear to a person. <strong>Greedy baseline</strong>
+  always takes the top candidate and never abstains: run it on the same seed and watch the wrong links appear.
+  <strong>Oracle ceiling</strong> reads the answer key; it is the ceiling a perfect tie-breaker could reach, not a result.
+  The Claude tie-breaker is not offered here, because calling it from a public page would mean shipping an API key to
+  every visitor. It lives in the repo's server app.</p>
+  <p class="error" id="err-try" role="alert" hidden></p>
+  <div class="out" id="out-try" hidden>
+    <div id="sum-try"></div>
+    <p><button type="button" id="dl-try">Download inputs, outputs and answer key (zip)</button></p>
+    <iframe id="rep-try" title="Reconciliation report" sandbox></iframe>
+  </div>
+</section>
+
+<section role="tabpanel" id="p-own" aria-labelledby="t-own" hidden>
+  <p class="notes">Reconcile your own three CSVs. <strong>Your files never leave this tab:</strong> the Python engine
+  runs here, in your browser, so nothing is uploaded anywhere. They need the same columns as the sample batch: Razorpay's
+  settlement recon report (amounts in paise), a bank statement (rupees, <code>DD-MM-YYYY</code>) and your books
+  (invoices and credit notes). With no answer key there is no accuracy score, but you still get the report, the
+  exceptions, the review queue and the proposed actions.</p>
+  <p><button type="button" id="dl-sample" data-needs-runtime disabled>Download the sample batch</button></p>
+  <form id="f-own">
+    <div class="files">
+      <label>razorpay_recon.csv <input type="file" id="file-rzp" accept=".csv"></label>
+      <label>bank_statement.csv <input type="file" id="file-bank" accept=".csv"></label>
+      <label>books.csv <input type="file" id="file-books" accept=".csv"></label>
+    </div>
+    <fieldset><legend>Tie-breaker</legend><div class="choice">
+      <label><input type="radio" name="tb-own" value="Rules only" checked> Rules only</label>
+      <label><input type="radio" name="tb-own" value="Greedy baseline"> Greedy baseline</label></div></fieldset>
+    <p><button type="submit" class="primary" id="go-own" data-needs-runtime disabled>Reconcile my files</button></p>
+  </form>
+  <p class="error" id="err-own" role="alert" hidden></p>
+  <div class="out" id="out-own" hidden>
+    <div id="sum-own"></div>
+    <p><button type="button" id="dl-own">Download outputs (zip)</button></p>
+    <iframe id="rep-own" title="Reconciliation report for your files" sandbox></iframe>
+  </div>
+</section>
+
+<section role="tabpanel" id="p-bench" aria-labelledby="t-bench" hidden>
+  <h2>Published results</h2>
+  {{PUBLISHED_HTML}}
+  <details>
+    <summary>Run it yourself on seeds you choose</summary>
+    <form id="f-bench">
+      <div class="controls">
+        <div><label for="seeds"><strong>Seeds</strong></label><br>
+          <input type="text" id="seeds" value="401-405">
+          <div class="small">A range like 401-410 or a list like 5,9,12. Up to 10 in the browser.</div></div>
+        <fieldset><legend>Batches</legend><div class="choice">
+          <label><input type="checkbox" name="b-diff" value="standard" checked> standard</label>
+          <label><input type="checkbox" name="b-diff" value="hard" checked> hard</label></div></fieldset>
+        <fieldset><legend>Tie-breakers</legend><div class="choice">
+          <label><input type="checkbox" name="b-tb" value="Rules only" checked> Rules only</label>
+          <label><input type="checkbox" name="b-tb" value="Greedy baseline" checked> Greedy baseline</label>
+          <label><input type="checkbox" name="b-tb" value="Oracle ceiling" checked> Oracle ceiling</label></div></fieldset>
+      </div>
+      <button type="submit" class="primary" id="go-bench" data-needs-runtime disabled>Run benchmark</button>
+    </form>
+    <p class="error" id="err-bench" role="alert" hidden></p>
+    <div class="out" id="out-bench" hidden>
+      <div id="sum-bench"></div>
+      <p><button type="button" id="dl-bench">Download results.md and results.json (zip)</button></p>
+    </div>
+  </details>
+</section>
+
+<section role="tabpanel" id="p-how" aria-labelledby="t-how" hidden>
+  {{HOW_HTML}}
+  <h3>Why it runs in your browser</h3>
+  <p>The engine is plain Python with no dependencies, so this page loads it into your browser with
+  <a href="https://pyodide.org">Pyodide</a> (CPython compiled to WebAssembly) and runs it there. No server does any work,
+  which is why it is free to host and why your uploaded files stay on your machine.</p>
+</section>
+
+<footer>{{FOOTER_HTML}}</footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const PYODIDE_BASE = "https://cdn.jsdelivr.net/npm/pyodide@{{PYODIDE_VERSION}}/";
+  const BUNDLE_B64 = "{{BUNDLE_B64}}";
+  const $ = (id) => document.getElementById(id);
+  let py = null;
+  let web = null;
+
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function selectTab(tab, focus) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute("aria-controls")).hidden = !on;
+    }
+    if (focus) tab.focus();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => selectTab(t, false));
+    t.addEventListener("keydown", (ev) => {
+      const step = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
+      if (step) { ev.preventDefault(); selectTab(tabs[(i + step + tabs.length) % tabs.length], true); }
+    });
+  });
+
+  function bytesFromB64(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function download(b64, name) {
+    const url = URL.createObjectURL(new Blob([bytesFromB64(b64)], { type: "application/zip" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  const nextFrame = () => new Promise((r) => setTimeout(r, 30));
+
+  async function boot() {
+    const status = $("status");
+    try {
+      const load = window.__reconloopLoadPyodide || (async () => {
+        const { loadPyodide } = await import(PYODIDE_BASE + "pyodide.mjs");
+        return loadPyodide({ indexURL: PYODIDE_BASE });
+      });
+      py = await load();
+      py.unpackArchive(bytesFromB64(BUNDLE_B64), "zip", { extractDir: "/home/pyodide/app" });
+      py.runPython("import sys; sys.path.insert(0, '/home/pyodide/app')");
+      web = py.pyimport("reconloop.web");
+      status.textContent = "Ready. The engine, the data and the scoring all run in this tab; nothing is sent anywhere.";
+      status.classList.add("ready");
+      document.querySelectorAll("[data-needs-runtime]").forEach((b) => { b.disabled = false; });
+    } catch (err) {
+      status.textContent = "The Python engine could not load (" + (err && err.message ? err.message : err) +
+        "). Use a recent Chrome, Edge, Firefox or Safari and reload.";
+      status.classList.add("bad");
+    }
+  }
+
+  async function run(prefix, call) {
+    const err = $("err-" + prefix), btn = $("go-" + prefix), label = btn.textContent;
+    err.hidden = true;
+    btn.disabled = true;
+    btn.textContent = "Running\u2026";
+    await nextFrame();
+    try {
+      const res = JSON.parse(call());
+      if (!res.ok) { err.textContent = res.error; err.hidden = false; return null; }
+      return res;
+    } catch (e) {
+      err.textContent = "Something went wrong: " + (e && e.message ? e.message : e);
+      err.hidden = false;
+      return null;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  }
+
+  function showRun(prefix, res) {
+    $("sum-" + prefix).innerHTML = res.summary_html;
+    $("rep-" + prefix).srcdoc = res.report_html;
+    $("dl-" + prefix).onclick = () => download(res.zip_b64, res.zip_name);
+    $("out-" + prefix).hidden = false;
+  }
+  const checked = (name) => document.querySelector('input[name="' + name + '"]:checked').value;
+  const allChecked = (name) => Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map((x) => x.value);
+
+  $("f-try").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const res = await run("try", () => web.synthetic(checked("difficulty"), $("seed").value, checked("tb-try")));
+    if (res) showRun("try", res);
+  });
+  $("dice").addEventListener("click", () => { $("seed").value = String(1000 + Math.floor(Math.random() * 999000)); });
+
+  $("dl-sample").addEventListener("click", () => {
+    const res = JSON.parse(web.sample_zip());
+    if (res.ok) download(res.zip_b64, res.zip_name);
+  });
+  $("f-own").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const names = ["razorpay_recon.csv", "bank_statement.csv", "books.csv"];
+    const inputs = [$("file-rzp"), $("file-bank"), $("file-books")];
+    const paths = {};
+    const dir = "/tmp/upload-" + Date.now();
+    try {
+      py.FS.mkdirTree(dir);
+      for (let i = 0; i < names.length; i++) {
+        const file = inputs[i].files && inputs[i].files[0];
+        if (!file) { paths[names[i]] = null; continue; }
+        const target = dir + "/" + names[i];
+        py.FS.writeFile(target, new Uint8Array(await file.arrayBuffer()));
+        paths[names[i]] = target;
+      }
+    } catch (e) {
+      const err = $("err-own");
+      err.textContent = "Could not read those files: " + (e && e.message ? e.message : e);
+      err.hidden = false;
+      return;
+    }
+    const res = await run("own", () => web.uploaded(JSON.stringify(paths), checked("tb-own")));
+    if (res) showRun("own", res);
+  });
+
+  $("f-bench").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const res = await run("bench", () =>
+      web.benchmark($("seeds").value, JSON.stringify(allChecked("b-diff")), JSON.stringify(allChecked("b-tb"))));
+    if (!res) return;
+    $("sum-bench").innerHTML = res.table_html;
+    $("dl-bench").onclick = () => download(res.zip_b64, res.zip_name);
+    $("out-bench").hidden = false;
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>
