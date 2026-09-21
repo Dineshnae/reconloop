@@ -1,0 +1,38 @@
+{
+  "payment": {
+    "id": "pay_tZE9ytOO45KEu5",
+    "amount": "₹699.00",
+    "date": "2026-08-16",
+    "method": "card",
+    "reference": null,
+    "payer_note": "Kiran from Brightpath, office order"
+  },
+  "candidates": [
+    {
+      "id": "INV/2026-27/00260",
+      "customer": "Brightpath Interiors LLP",
+      "amount": "₹699.00",
+      "date": "2026-08-16",
+      "evidence": {
+        "contact_match": false,
+        "reference_match": false,
+        "amount_difference": "₹0.00",
+        "days_apart": 0,
+        "name_similarity": 0.6
+      }
+    },
+    {
+      "id": "INV/2026-27/00261",
+      "customer": "Kiran Kumar",
+      "amount": "₹699.00",
+      "date": "2026-08-16",
+      "evidence": {
+        "contact_match": false,
+        "reference_match": false,
+        "amount_difference": "₹0.00",
+        "days_apart": 0,
+        "name_similarity": 0.6
+      }
+    }
+  ]
+}
