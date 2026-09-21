@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev,claude]"
+      - run: pytest -q
+      - name: Accuracy gate (rules alone make zero wrong links on held-out batches)
+        run: python -m reconloop bench --seeds 301-310 --difficulty standard,hard --tie-breaker offline --out .gate --max-wrong-links 0
