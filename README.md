@@ -220,6 +220,6 @@ docs/                  design notes, build log, sample report
 
 ## How this was built
 
-Designed and built with Claude as a pair programmer. The benchmark, the grader and the failure analysis are the point: every number above can be reproduced with the commands in this file.
+Designed and built by Dinesh Natarajan with Claude as a pair programmer. The benchmark, the grader and the failure analysis are the point: every number above can be reproduced with the commands in this file.
 
 MIT licensed.
